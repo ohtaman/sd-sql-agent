@@ -8,3 +8,21 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Environments
+.env
+.env.local
+
+# Data directory
+data/
+
+# Database files
+*.db
+*.sqlite
+*.duckdb
+
+# Caches and logs
+.pytest_cache/
+.adk/
+.claude/
+logs/
