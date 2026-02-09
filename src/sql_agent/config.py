@@ -1,14 +1,8 @@
 """
-<<<<<<< HEAD
 アプリケーション設定管理
 
 .env ファイルおよび環境変数を介して、パスやモデル名などの設定を制御する。
 パスが相対パスで指定された場合、プロジェクトルートを基準として解決する。
-=======
-設定の窓口：.env とプロジェクト内パス。ここだけ見ればよい。
-
-.env のパス: 相対パスなら project_root 基準、絶対パスならそのまま使う。
->>>>>>> ff96d51 (refactor: config単一ファイル化、eval改善)
 """
 
 import os
@@ -42,6 +36,11 @@ DUCKDB_PATH = _resolve_path(
     os.getenv("SQL_AGENT_DUCKDB_PATH"),
     Path("duckdb") / "workspace.duckdb",
 )
+KNOWLEDGES_DUCKDB_PATH = _resolve_path(
+    os.getenv("SQL_AGENT_KNOWLEDGES_DUCKDB_PATH"),
+    Path("duckdb") / "knowledges.duckdb",
+)
+KNOWLEDGES_SCHEMA = os.getenv("SQL_AGENT_KNOWLEDGES_SCHEMA", "knowledges")
 BIRD_PATH = _resolve_path(
     os.getenv("SQL_AGENT_BIRD_PATH"),
     Path("data") / "bird" / "minidev" / "MINIDEV",

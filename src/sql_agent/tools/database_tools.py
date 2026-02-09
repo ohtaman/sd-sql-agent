@@ -101,7 +101,6 @@ class DatabaseTools:
 
         Args:
             database (str, optional): 対象データベース名を指定する。省略時は attach されている全 DB を対象に各スキーマのテーブルを返す。
-
         Returns:
             List[Dict[str, Any]]: テーブル情報のリスト。完全修飾名（database.table）を含む。
         """
@@ -125,7 +124,7 @@ class DatabaseTools:
     
     def describe_tables(self, table_full_names: List[str]) -> Dict[str, Any]:
         """
-        生のスキーマ情報からテーブル構造（カラム名、データ型、制約など）を取得する。
+        スキーマ情報からテーブル構造（カラム名、データ型、制約など）を取得する。
 
         Args:
             table_full_names (List[str]): 構造情報を取得したいテーブル名（完全修飾名）のリスト
