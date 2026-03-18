@@ -43,7 +43,7 @@ class DatabaseToolsWithKnowledges(DatabaseTools):
             if not table_full_names:
                 return raw_table_list
             knowledge_rows = get_by_database(
-                self.connection, database, table_full_names=table_full_names, schema=config.KNOWLEDGES_SCHEMA
+                self.connection, scope=database, table_full_names=table_full_names, schema=config.KNOWLEDGES_SCHEMA
             )
             return self._enrich_list_tables(raw_table_list, knowledge_rows)
         # 引数なし（全 DB 対象）: DB ごとに knowledges を取得してマージ
@@ -63,7 +63,7 @@ class DatabaseToolsWithKnowledges(DatabaseTools):
                 continue
             all_knowledge_rows.extend(
                 get_by_database(
-                    self.connection, db_name, table_full_names=names, schema=config.KNOWLEDGES_SCHEMA
+                    self.connection, scope=db_name, table_full_names=names, schema=config.KNOWLEDGES_SCHEMA
                 )
             )
         return self._enrich_list_tables(raw_table_list, all_knowledge_rows)
@@ -81,7 +81,7 @@ class DatabaseToolsWithKnowledges(DatabaseTools):
 
         ensure_attached(self.connection)
         raw_describe_result = super().describe_tables(table_full_names)
-        # 先頭のテーブル名からデータベース名を取得（例: "db1.table1" -> "db1"）
+        # 先頭のテーブル名からデータベース名/スコープを取得（例: "db1.table1" -> "db1"）
         database_name = (
             table_full_names[0].split(".", 1)[0]
             if table_full_names and "." in table_full_names[0]
@@ -91,7 +91,7 @@ class DatabaseToolsWithKnowledges(DatabaseTools):
             return raw_describe_result
         knowledge_rows = get_by_database(
             self.connection,
-            database_name,
+            scope=database_name,
             table_full_names=list(raw_describe_result.keys()),
             schema=config.KNOWLEDGES_SCHEMA,
         )

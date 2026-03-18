@@ -134,7 +134,7 @@ def main(db_id: Optional[str], replace_db_id: Optional[str]) -> None:
     schema = config.KNOWLEDGES_SCHEMA
 
     if replace_db_id:
-        con.execute(f'DELETE FROM "{schema}".knowledges WHERE database_name = ?', [replace_db_id])
+        con.execute(f'DELETE FROM "{schema}".knowledges WHERE scope = ?', [replace_db_id])
         click.echo(f"Deleted existing knowledges for database '{replace_db_id}'.")
 
     # db_id ごとにグループ化
@@ -182,7 +182,7 @@ def main(db_id: Optional[str], replace_db_id: Optional[str]) -> None:
         for item in refined:
             knowledges_insert(
                 con,
-                database_name=database_name,
+                scope=database_name,
                 table_full_names=item.table_full_names or [],
                 column_names=item.column_names or [],
                 kind=item.kind,

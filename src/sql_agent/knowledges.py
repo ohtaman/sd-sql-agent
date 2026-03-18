@@ -21,7 +21,7 @@ def ensure_attached(con: duckdb.DuckDBPyConnection) -> None:
     con.execute(f"ATTACH IF NOT EXISTS '{path}' AS {schema} (TYPE duckdb)")
     con.execute(f"""
         CREATE TABLE IF NOT EXISTS "{schema}".knowledges (
-            database_name VARCHAR NOT NULL,
+            scope VARCHAR NOT NULL,
             table_full_names VARCHAR[] NOT NULL,
             column_names VARCHAR[] NOT NULL,
             kind VARCHAR NOT NULL,
@@ -38,7 +38,7 @@ def init_schema(con: duckdb.DuckDBPyConnection) -> None:
     """knowledges テーブルを未作成なら作成する。"""
     con.execute("""
         CREATE TABLE IF NOT EXISTS knowledges (
-            database_name VARCHAR NOT NULL,
+            scope VARCHAR NOT NULL,
             table_full_names VARCHAR[] NOT NULL,
             column_names VARCHAR[] NOT NULL,
             kind VARCHAR NOT NULL,
@@ -53,7 +53,7 @@ def init_schema(con: duckdb.DuckDBPyConnection) -> None:
 
 def insert(
     con: duckdb.DuckDBPyConnection,
-    database_name: str,
+    scope: str,
     table_full_names: list[str],
     column_names: list[str],
     kind: str,
@@ -62,37 +62,63 @@ def insert(
     source: str | None = None,
     schema: str | None = None,
 ) -> None:
-    """knowledges に1行挿入する。updated_at=now(), deleted_at=NULL。"""
+    """
+    knowledges に1行挿入する。
+
+    Args:
+        scope: スコープ（スキーマ名またはデータベース名）。
+            BIRDの場合はデータベース名、dbtの場合はスキーマ名。
+        table_full_names: この知識が関連するテーブルの完全修飾名のリスト。
+        column_names: この知識が関連するカラムの完全修飾名のリスト。
+        kind: 知識の種類（"metric", "relation", "definition", "summary"など）。
+        content: 知識の内容。
+        title: 知識のタイトル（任意）。
+        source: 知識の出所（"bird_evidence"など、任意）。
+        schema: knowledgesテーブルが存在するスキーマ名。
+
+    Note:
+        updated_at は現在時刻、deleted_at は NULL で挿入される。
+    """
     schema = schema or config.KNOWLEDGES_SCHEMA
     now = datetime.now(timezone.utc).isoformat()
     con.execute(
         f"""
         INSERT INTO "{schema}".knowledges (
-            database_name, table_full_names, column_names, kind, title, content, source, updated_at, deleted_at
+            scope, table_full_names, column_names, kind, title, content, source, updated_at, deleted_at
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?::TIMESTAMP, NULL)
         """,
-        [database_name, table_full_names, column_names, kind, title or None, content, source or None, now],
+        [scope, table_full_names, column_names, kind, title or None, content, source or None, now],
     )
 
 
 def get_by_database(
     con: duckdb.DuckDBPyConnection,
-    database_name: str,
+    scope: str,
     table_full_names: list[str] | None = None,
     schema: str | None = None,
 ) -> list[dict[str, Any]]:
     """
-    指定データベースの knowledges を取得。deleted_at IS NULL のみ。
-    table_full_names を指定した場合、そのテーブルいずれかに紐づく行だけ返す
-    （行の table_full_names と引数の table_full_names に共通要素があるもの）。
+    指定スコープの knowledges を取得。deleted_at IS NULL のみ。
+
+    Args:
+        scope: スコープ（スキーマ名またはデータベース名）。
+            BIRDの場合はデータベース名（例: "debit_card_specializing"）、
+            dbtの場合はスキーマ名（例: "staging", "marts_finance"）。
+        table_full_names: 特定のテーブルに絞り込む場合、テーブル完全修飾名のリスト。
+        schema: knowledgesテーブルが存在するスキーマ名。
+
+    Returns:
+        条件に一致するknowledgesのリスト。
+        table_full_names を指定した場合、そのテーブルいずれかに紐づく行だけ返す
+        （行の table_full_names と引数の table_full_names に共通要素があるもの）。
     """
     schema = schema or config.KNOWLEDGES_SCHEMA
     con.execute(
-        f'SELECT database_name, table_full_names, column_names, kind, title, content, source FROM "{schema}".knowledges WHERE database_name = ? AND deleted_at IS NULL',
-        [database_name],
+        f'SELECT scope, table_full_names, column_names, kind, title, content, source FROM "{schema}".knowledges WHERE scope = ? AND deleted_at IS NULL',
+        [scope],
     )
     rows = con.fetchall()
-    columns = ["database_name", "table_full_names", "column_names", "kind", "title", "content", "source"]
+    columns = ["scope", "table_full_names", "column_names", "kind", "title", "content", "source"]
     result = [dict(zip(columns, row)) for row in rows]
     if table_full_names:
         want = set(table_full_names)
