@@ -26,3 +26,7 @@ data/
 .adk/
 .claude/
 logs/
+
+# Project-specific context
+CLAUDE.md
+docs/

@@ -22,6 +22,7 @@ dev = [
 
 [project.scripts]
 eval-bird = "sql_agent.eval.eval_bird:evaluate"
+load-bird-knowledges = "sql_agent.load_bird_knowledges:main"
 
 [build-system]
 requires = ["hatchling"]

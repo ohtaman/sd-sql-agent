@@ -36,6 +36,11 @@ DUCKDB_PATH = _resolve_path(
     os.getenv("SQL_AGENT_DUCKDB_PATH"),
     Path("duckdb") / "workspace.duckdb",
 )
+KNOWLEDGES_DUCKDB_PATH = _resolve_path(
+    os.getenv("SQL_AGENT_KNOWLEDGES_DUCKDB_PATH"),
+    Path("duckdb") / "knowledges.duckdb",
+)
+KNOWLEDGES_SCHEMA = os.getenv("SQL_AGENT_KNOWLEDGES_SCHEMA", "knowledges")
 BIRD_PATH = _resolve_path(
     os.getenv("SQL_AGENT_BIRD_PATH"),
     Path("data") / "bird" / "minidev" / "MINIDEV",
