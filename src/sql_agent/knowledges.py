@@ -67,13 +67,13 @@ def insert(
 
     Args:
         scope: スコープ（スキーマ名またはデータベース名）。
-            BIRDの場合はデータベース名、dbtの場合はスキーマ名。
+            BIRDの場合はデータベース名、thelook/dbtの場合はスキーマ名。
         table_full_names: この知識が関連するテーブルの完全修飾名のリスト。
         column_names: この知識が関連するカラムの完全修飾名のリスト。
-        kind: 知識の種類（"metric", "relation", "definition", "summary"など）。
+        kind: 知識の種類（"description", "evidence", "metric", "test", "relation"など）。
         content: 知識の内容。
         title: 知識のタイトル（任意）。
-        source: 知識の出所（"bird_evidence"など、任意）。
+        source: 知識の出所（"bird", "dbt_manifest"など、任意）。
         schema: knowledgesテーブルが存在するスキーマ名。
 
     Note:
@@ -93,30 +93,35 @@ def insert(
 
 def get_by_database(
     con: duckdb.DuckDBPyConnection,
-    scope: str,
+    scope: str | None = None,
     table_full_names: list[str] | None = None,
     schema: str | None = None,
 ) -> list[dict[str, Any]]:
     """
-    指定スコープの knowledges を取得。deleted_at IS NULL のみ。
+    knowledges を取得。deleted_at IS NULL のみ。
 
     Args:
-        scope: スコープ（スキーマ名またはデータベース名）。
+        scope: スコープ（データソース名またはデータベース名）。
             BIRDの場合はデータベース名（例: "debit_card_specializing"）、
-            dbtの場合はスキーマ名（例: "staging", "marts_finance"）。
+            dbtの場合はプロジェクト名（例: "thelook"）。
+            省略時は全スコープを対象とする。
         table_full_names: 特定のテーブルに絞り込む場合、テーブル完全修飾名のリスト。
         schema: knowledgesテーブルが存在するスキーマ名。
 
     Returns:
         条件に一致するknowledgesのリスト。
-        table_full_names を指定した場合、そのテーブルいずれかに紐づく行だけ返す
-        （行の table_full_names と引数の table_full_names に共通要素があるもの）。
+        table_full_names を指定した場合、そのテーブルいずれかに紐づく行だけ返す。
     """
     schema = schema or config.KNOWLEDGES_SCHEMA
-    con.execute(
-        f'SELECT scope, table_full_names, column_names, kind, title, content, source FROM "{schema}".knowledges WHERE scope = ? AND deleted_at IS NULL',
-        [scope],
-    )
+    if scope:
+        con.execute(
+            f'SELECT scope, table_full_names, column_names, kind, title, content, source FROM "{schema}".knowledges WHERE scope = ? AND deleted_at IS NULL',
+            [scope],
+        )
+    else:
+        con.execute(
+            f'SELECT scope, table_full_names, column_names, kind, title, content, source FROM "{schema}".knowledges WHERE deleted_at IS NULL',
+        )
     rows = con.fetchall()
     columns = ["scope", "table_full_names", "column_names", "kind", "title", "content", "source"]
     result = [dict(zip(columns, row)) for row in rows]

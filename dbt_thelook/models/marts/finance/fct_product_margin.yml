@@ -1,0 +1,40 @@
+models:
+  - name: fct_product_margin
+    description: >
+      商品別粗利ファクトテーブル。
+      各行は1商品の累計粗利を表す。
+      主キーはproduct_id。
+      粗利はsale_price - costで算出。
+      商品パフォーマンス分析に使用。
+    columns:
+      - name: product_id
+        description: 商品ID（主キー）
+        data_tests:
+          - unique
+          - not_null
+      - name: product_name
+        description: 商品名
+      - name: category
+        description: カテゴリ
+      - name: brand
+        description: ブランド
+      - name: department
+        description: 部門
+      - name: total_revenue
+        description: >
+          累計売上（USD）。
+          sale_priceの合計。
+      - name: total_cost
+        description: >
+          累計原価（USD）。
+          costの合計。
+      - name: total_margin
+        description: >
+          累計粗利（USD）。
+          total_revenue - total_costで算出。
+      - name: units_sold
+        description: 販売数量（明細数）
+      - name: margin_rate
+        description: >
+          粗利率（%）。
+          total_margin / total_revenue * 100で算出。

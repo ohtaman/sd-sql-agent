@@ -1,0 +1,24 @@
+models:
+  - name: fct_daily_sales
+    description: >
+      日次売上ファクトテーブル。各行は1日の売上サマリを表す。
+      売上は発送基準で計上（Shipped, Completeのみ）。
+      Processing（未発送）、Cancelled、Returnedは除外。
+    columns:
+      - name: sales_date
+        description: 売上日（主キー）
+        data_tests:
+          - unique
+          - not_null
+      - name: revenue
+        description: 日次売上。発送基準で計上。
+        data_tests:
+          - not_null
+      - name: order_count
+        description: 注文数
+        data_tests:
+          - not_null
+      - name: item_count
+        description: 販売商品数（明細数）
+        data_tests:
+          - not_null

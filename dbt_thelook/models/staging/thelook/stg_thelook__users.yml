@@ -1,0 +1,28 @@
+models:
+  - name: stg_thelook__users
+    description: >
+      ユーザーステージングテーブル。
+      ソーステーブル thelook_ecommerce.users と1:1対応。
+      型変換とカラム選択のみ実施。
+    columns:
+      - name: user_id
+        description: ユーザーの一意識別子（主キー）
+        data_tests:
+          - unique
+          - not_null
+      - name: first_name
+        description: 名
+      - name: last_name
+        description: 姓
+      - name: email
+        description: メールアドレス
+      - name: age
+        description: 年齢
+      - name: gender
+        description: 性別
+      - name: state
+        description: 州
+      - name: country
+        description: 国
+      - name: created_at
+        description: ユーザー登録日時

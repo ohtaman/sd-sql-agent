@@ -1,0 +1,40 @@
+models:
+  - name: stg_thelook__order_items
+    description: >
+      注文明細ステージングテーブル。
+      ソーステーブル thelook_ecommerce.order_items と1:1対応。
+      各行は1件の注文明細（1商品）を表す。
+    columns:
+      - name: order_item_id
+        description: 明細の一意識別子（主キー）
+        data_tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: 注文ID
+        data_tests:
+          - not_null
+      - name: user_id
+        description: ユーザーID
+      - name: product_id
+        description: 商品ID
+        data_tests:
+          - not_null
+      - name: inventory_item_id
+        description: 在庫アイテムID
+      - name: item_status
+        description: 明細ステータス
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['Processing', 'Shipped', 'Complete', 'Cancelled', 'Returned']
+      - name: item_created_at
+        description: 明細作成日時
+      - name: shipped_at
+        description: 発送日時
+      - name: delivered_at
+        description: 配送完了日時
+      - name: returned_at
+        description: 返品日時
+      - name: sale_price
+        description: 販売価格（USD）

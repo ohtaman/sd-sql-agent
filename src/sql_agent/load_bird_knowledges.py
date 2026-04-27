@@ -38,7 +38,7 @@ class KnowledgeList(BaseModel):
 REFINEMENT_PROMPT = """あなたはText-to-SQLシステムのためのナレッジエンジニアです。以下に与える質問とヒントから、ルールや定義を抽出してください。
 
 ## 詳細
-1. ヒントから、各テーブルの概要と、ルールや定義を抽出すること
+1. 以下のヒントから、各テーブルの概要と、ルールや定義を抽出し、title と content に設定すること
 2. 1つのヒントに複数のルールや定義が含まれている場合は、それぞれ独立したものとして扱うこと
 3. ルールや定義の重複は除外すること
 4. コンテキスト情報を利用して、ルールや定義を適用すべきテーブルやカラムを特定し、table_full_names および column_names に設定すること
@@ -46,14 +46,14 @@ REFINEMENT_PROMPT = """あなたはText-to-SQLシステムのためのナレッ�
 6. 適用すべきカラムはクエリ生成に用いるため、確度が高いものに限定すること
 7. ヒントが具体的な例を含む場合は、具体例として content に含めること
 8. kind は次のいずれかで設定すること
-   - 'metric': メトリクス・指標の定義
-   - 'relation': テーブル間の関係・結合に関する情報
-   - 'definition': 用語・ビジネスルール・データ形式などの定義
-   - 'summary': テーブルやカラムの要約、その他上記に当てはまらない説明
-9. table_full_names と column_names は必ず完全修飾名で出力すること。テーブルは "database_name.table_name"、カラムは "database_name.table_name.column_name" の形とし、ここで与える database_name をプレフィックスに使うこと。該当するテーブル・カラムがない場合は空リストにすること
+    - 'metric': メトリクス・指標の定義
+    - 'relation': テーブル間の関係・結合に関する情報
+    - 'definition': 用語・ビジネスルール・データ形式などの定義
+    - 'summary': テーブルやカラムの要約、その他上記に当てはまらない説明
+9. table_full_names と column_names は必ず完全修飾名で出力すること。テーブルは "scope.table_name"、カラムは "scope.table_name.column_name" の形とし、ここで与える scope をプレフィックスに使うこと。該当するテーブル・カラムがない場合は空リストにすること
 
 ## コンテキスト情報
-Database: {database_name}
+Database: {scope}
 {context_str}
 
 ## 質問とヒント
@@ -62,7 +62,7 @@ Database: {database_name}
 
 
 async def _run_refinement_async(
-    database_name: str,
+    scope: str,
     context_str: str,
     evidence_text: str,
 ) -> list[KnowledgeItem]:
@@ -84,7 +84,7 @@ async def _run_refinement_async(
     runner = Runner(agent=agent, session_service=session_service, app_name=app_name)
 
     prompt = REFINEMENT_PROMPT.format(
-        database_name=database_name,
+        scope=scope,
         context_str=context_str,
         evidence_text=evidence_text,
     )
@@ -105,9 +105,9 @@ async def _run_refinement_async(
     return []
 
 
-def _refine_knowledge(database_name: str, context_str: str, evidence_text: str) -> list[KnowledgeItem]:
+def _refine_knowledge(scope: str, context_str: str, evidence_text: str) -> list[KnowledgeItem]:
     """同期ラッパー。"""
-    return asyncio.run(_run_refinement_async(database_name, context_str, evidence_text))
+    return asyncio.run(_run_refinement_async(scope, context_str, evidence_text))
 
 
 @click.command()
@@ -148,7 +148,7 @@ def main(db_id: Optional[str], replace_db_id: Optional[str]) -> None:
     from sql_agent.tools.database_tools import DatabaseTools
     db_tools = DatabaseTools()
 
-    for database_name, items in by_db.items():
+    for scope, items in by_db.items():
         evidence_text = ""
         for it in items:
             q = it.get("question", "N/A")
@@ -156,8 +156,8 @@ def main(db_id: Optional[str], replace_db_id: Optional[str]) -> None:
             evidence_text += f"Question Impact: {q}\n  Evidence Rule: {e}\n\n"
 
         try:
-            db_tools.connect(database_name)
-            tables = db_tools.list_tables(database_name)
+            db_tools.connect(scope)
+            tables = db_tools.list_tables(scope)
             table_full_names = [t.get("full_name") or t.get("name", "") for t in tables]
             schema_info = db_tools.describe_tables(table_full_names)
             schema_lines = []
@@ -175,14 +175,14 @@ def main(db_id: Optional[str], replace_db_id: Optional[str]) -> None:
         except Exception:
             context_str = "Tables: (could not list)"
 
-        click.echo(f"Refining knowledge for database '{database_name}' ({len(items)} items)...")
-        refined = _refine_knowledge(database_name, context_str, evidence_text)
+        click.echo(f"Refining knowledge for database '{scope}' ({len(items)} items)...")
+        refined = _refine_knowledge(scope, context_str, evidence_text)
         click.echo(f"  Got {len(refined)} knowledge items.")
 
         for item in refined:
             knowledges_insert(
                 con,
-                scope=database_name,
+                scope=scope,
                 table_full_names=item.table_full_names or [],
                 column_names=item.column_names or [],
                 kind=item.kind,
@@ -191,7 +191,7 @@ def main(db_id: Optional[str], replace_db_id: Optional[str]) -> None:
                 source=item.source or "bird_evidence",
                 schema=schema,
             )
-        click.echo(f"  Inserted {len(refined)} rows for '{database_name}'.")
+        click.echo(f"  Inserted {len(refined)} rows for '{scope}'.")
 
     con.close()
     click.echo("Done.")

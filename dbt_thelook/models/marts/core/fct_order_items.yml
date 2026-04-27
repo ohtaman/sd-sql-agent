@@ -1,0 +1,43 @@
+models:
+  - name: fct_order_items
+    description: >
+      注文明細ファクトテーブル。
+      各行は1件の注文明細（1商品）を表す。
+      主キーはorder_item_id。
+      売上は発送基準で計上（Shipped, Completeのみ）。
+      Processing（未発送）、Cancelled、Returnedは除外。
+      商品情報（商品名、カテゴリ、ブランド）を結合済み。
+    columns:
+      - name: order_item_id
+        description: 注文明細の一意識別子（主キー）
+        data_tests:
+          - unique
+          - not_null
+      - name: order_id
+        description: 注文ID
+        data_tests:
+          - not_null
+      - name: user_id
+        description: ユーザーID
+      - name: product_id
+        description: 商品ID
+      - name: product_name
+        description: 商品名
+      - name: category
+        description: カテゴリ
+      - name: brand
+        description: ブランド
+      - name: department
+        description: 部門
+      - name: sale_price
+        description: 販売価格（USD）
+      - name: cost
+        description: 原価（USD）
+      - name: margin
+        description: >
+          粗利（USD）。
+          sale_price - costとして算出。
+      - name: item_status
+        description: 明細ステータス
+      - name: created_at
+        description: 明細作成日時

@@ -12,6 +12,10 @@ wheels/
 # Environments
 .env
 .env.local
+.envrc
+
+# GCloud config (contains credentials)
+../.gcloud/
 
 # Data directory
 data/
@@ -21,11 +25,19 @@ data/
 *.sqlite
 *.duckdb
 
+# dbt
+dbt_thelook/target/
+dbt_thelook/dbt_packages/
+dbt_thelook/logs/
+dbt_thelook/profiles.yml
+dbt_thelook/.user.yml
+
 # Caches and logs
 .pytest_cache/
 .adk/
 .claude/
 logs/
+*.log
 
 # Project-specific context
 CLAUDE.md

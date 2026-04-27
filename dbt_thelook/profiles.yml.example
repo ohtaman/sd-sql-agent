@@ -1,0 +1,25 @@
+# profiles.yml.example
+# このファイルを profiles.yml にコピーして使用してください
+#
+# 使用方法:
+# 1. cp profiles.yml.example profiles.yml
+# 2. <your_project_id> を自分のGCPプロジェクトIDに置き換える
+# 3. gcloud auth application-default login で認証
+
+thelook_ecommerce:  # プロジェクト名（dbt_project.ymlのprofileと一致）
+  target: dev  # デフォルトで使う環境
+  outputs:
+    dev:  # 開発環境の設定
+      type: duckdb  # DuckDBを使う
+      path: ../duckdb/thelook.duckdb  # DuckDBファイルの保存先
+      threads: 4  # 並列実行数
+      extensions:  # DuckDB拡張機能
+        - name: bigquery  # BigQuery拡張を有効化
+          repo: community
+      settings:
+        timezone: UTC  # タイムゾーン設定
+      attach:  # 外部データベースをアタッチ
+        - path: "project=bigquery-public-data dataset=thelook_ecommerce billing_project=<your_project_id>"
+          alias: bq  # 参照時の別名
+          type: bigquery  # BigQueryとして接続
+          read_only: true  # 読み取り専用
