@@ -1,0 +1,31 @@
+models:
+  - name: int_order_items_with_products
+    description: >
+      注文明細と商品マスタを結合した中間テーブル。
+      各行は1件の注文明細を表すが、商品情報も含む。
+      商品別分析で再利用するためintermediateに配置。
+    columns:
+      - name: order_item_id
+        description: 注文明細ID
+      - name: order_id
+        description: 注文ID
+      - name: product_id
+        description: 商品ID
+      - name: product_name
+        description: 商品名
+      - name: category
+        description: カテゴリ
+      - name: brand
+        description: ブランド
+      - name: department
+        description: 部門
+      - name: sale_price
+        description: 販売価格（USD）
+      - name: cost
+        description: 原価（USD）
+      - name: retail_price
+        description: 小売価格（USD）
+      - name: item_created_at
+        description: 明細作成日時
+      - name: item_status
+        description: 明細ステータス

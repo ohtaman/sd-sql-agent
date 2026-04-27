@@ -1,0 +1,25 @@
+models:
+  - name: dim_users
+    description: >
+      ユーザーディメンションテーブル。
+      各行は1人のユーザーを表す。
+      主キーはuser_id。
+      ソースはthelook_ecommerce.users。
+    columns:
+      - name: user_id
+        description: ユーザーの一意識別子（主キー）
+        data_tests:
+          - unique
+          - not_null
+      - name: full_name
+        description: フルネーム（first_name + last_name）
+      - name: email
+        description: メールアドレス
+      - name: age
+        description: 年齢
+      - name: gender
+        description: 性別
+      - name: location
+        description: 所在地（state, country）
+      - name: created_at
+        description: ユーザー登録日時

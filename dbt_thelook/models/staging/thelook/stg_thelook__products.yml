@@ -1,0 +1,32 @@
+models:
+  - name: stg_thelook__products
+    description: >
+      商品ステージングテーブル。
+      ソーステーブル thelook_ecommerce.products と1:1対応。
+      各行は1商品を表す。
+    columns:
+      - name: product_id
+        description: 商品の一意識別子（主キー）
+        data_tests:
+          - unique
+          - not_null
+      - name: product_name
+        description: 商品名
+      - name: product_cost
+        description: 原価（USD）
+      - name: category
+        description: カテゴリ
+      - name: brand
+        description: ブランド名
+      - name: retail_price
+        description: 小売価格（USD）
+      - name: department
+        description: 部門
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['Men', 'Women']
+      - name: sku
+        description: SKU（Stock Keeping Unit）
+      - name: distribution_center_id
+        description: 配送センターID

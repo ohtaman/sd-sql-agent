@@ -1,0 +1,9 @@
+sources:
+  - name: thelook  # ソース名（SQL内で参照する名前）
+    database: bq  # profiles.ymlで定義した別名
+    schema: thelook_ecommerce  # BigQueryのデータセット名
+    tables:  # 使用するテーブル一覧
+      - name: users
+      - name: orders
+      - name: order_items
+      - name: products

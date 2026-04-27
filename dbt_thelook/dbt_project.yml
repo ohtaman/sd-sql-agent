@@ -1,0 +1,36 @@
+name: 'thelook_ecommerce'
+version: '1.0.0'
+config-version: 2
+
+profile: 'thelook_ecommerce'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  thelook_ecommerce:
+    # Staging層: ソースと1:1、型変換・リネーム・軽いクレンジングのみ
+    staging:
+      +materialized: table
+      +schema: staging
+
+    # Intermediate層: 結合・フィルタ・集約の中間処理
+    intermediate:
+      +materialized: view
+      +schema: intermediate
+
+    # Marts層: ビジネス領域ごとの最終成果物
+    marts:
+      +materialized: table
+      core:
+        +schema: marts_core
+      finance:
+        +schema: marts_finance

@@ -1,0 +1,27 @@
+models:
+  - name: dim_products
+    description: >
+      商品ディメンションテーブル。
+      各行は1商品を表す。
+      主キーはproduct_id。
+      ソースはthelook_ecommerce.products。
+    columns:
+      - name: product_id
+        description: 商品の一意識別子（主キー）
+        data_tests:
+          - unique
+          - not_null
+      - name: product_name
+        description: 商品名
+      - name: category
+        description: カテゴリ
+      - name: brand
+        description: ブランド
+      - name: department
+        description: 部門
+      - name: product_cost
+        description: 原価（USD）
+      - name: retail_price
+        description: 小売価格（USD）
+      - name: sku
+        description: SKU（Stock Keeping Unit）

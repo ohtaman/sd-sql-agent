@@ -13,6 +13,8 @@ dependencies = [
     "pandas>=2.3.3",
     "pydantic>=2.0.0",
     "google-adk",
+    "dbt-duckdb>=1.10.1",
+    "google-cloud-bigquery>=3.40.0",
 ]
 
 [project.optional-dependencies]
@@ -23,6 +25,11 @@ dev = [
 [project.scripts]
 eval-bird = "sql_agent.eval.eval_bird:evaluate"
 load-bird-knowledges = "sql_agent.load_bird_knowledges:main"
+load-dbt-knowledges = "sql_agent.load_dbt_knowledges:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
 
 [build-system]
 requires = ["hatchling"]

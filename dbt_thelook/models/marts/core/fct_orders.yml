@@ -1,0 +1,27 @@
+models:
+  - name: fct_orders
+    description: >
+      注文ファクトテーブル。
+      各行は1件の注文を表す。
+      主キーはorder_id。
+      注文金額（order_total）は、order_itemsのsale_priceを合計して算出。
+    columns:
+      - name: order_id
+        description: 注文の一意識別子（主キー）
+        data_tests:
+          - unique
+          - not_null
+      - name: user_id
+        description: 注文したユーザーID
+        data_tests:
+          - not_null
+      - name: order_status
+        description: 注文ステータス
+      - name: order_total
+        description: 注文金額（USD）。order_itemsのsale_priceを合計。
+      - name: item_count
+        description: 注文内の明細数
+      - name: created_at
+        description: 注文作成日時
+      - name: shipped_at
+        description: 発送日時

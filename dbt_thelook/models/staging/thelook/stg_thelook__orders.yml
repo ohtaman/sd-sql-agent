@@ -1,0 +1,30 @@
+models:
+  - name: stg_thelook__orders
+    description: >
+      注文ステージングテーブル。
+      ソーステーブル thelook_ecommerce.orders と1:1対応。
+      各行は1件の注文を表す。
+    columns:
+      - name: order_id
+        description: 注文の一意識別子（主キー）
+        data_tests:
+          - unique
+          - not_null
+      - name: user_id
+        description: 注文したユーザーID
+        data_tests:
+          - not_null
+      - name: order_status
+        description: 注文ステータス
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['Processing', 'Shipped', 'Complete', 'Cancelled', 'Returned']
+      - name: created_at
+        description: 注文作成日時
+      - name: returned_at
+        description: 返品日時
+      - name: shipped_at
+        description: 発送日時
+      - name: num_of_item
+        description: 注文内の商品数
