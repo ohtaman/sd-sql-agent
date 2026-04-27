@@ -69,10 +69,13 @@ class DatabaseTools:
                     except Exception as e:
                         logger.warning("Failed to attach %s: %s", db_name, e)
 
+
     def connect(self, database_name: str | None = None) -> None:
         """接続の準備（DB_TYPE=bird のときは dev_databases を attach）。"""
         if config.DB_TYPE == "bird":
             self._attach_bird_databases(database_name)
+        elif config.DB_TYPE == "thelook":
+            pass
         else:
             raise ValueError(f"Unsupported database type: {config.DB_TYPE}")
     
@@ -95,31 +98,68 @@ class DatabaseTools:
         except Exception as e:
             return [{"error": str(e)}]
     
-    def list_tables(self, database: str = None) -> List[Dict[str, Any]]:
+    def list_tables(self, scope: str = None) -> List[Dict[str, Any]]:
         """
         データベースのスキーマ情報に基づき、テーブル一覧を取得する。
 
         Args:
-            database (str, optional): 対象データベース名を指定する。省略時は attach されている全 DB を対象に各スキーマのテーブルを返す。
+            scope (str, optional): 対象のスコープ（スキーマ名またはデータベース名）を指定する。
+                省略時は全スコープのテーブルを返す。
         Returns:
-            List[Dict[str, Any]]: テーブル情報のリスト。完全修飾名（database.table）を含む。
+            List[Dict[str, Any]]: テーブル情報のリスト。完全修飾名（scope.table）を含む。
         """
         con = self.connection
-        if database:
-            query = f"SHOW TABLES FROM {database}"
-            result_df = con.sql(query).df()
-            result_df['full_name'] = result_df['name'].apply(lambda x: f"{database}.{x}")
-            json_str = result_df.to_json(orient='records', date_format='iso')
-            return json.loads(json_str)
-        # 引数なし: attach 済みの全 DB をループしてテーブル一覧を集める
-        rows: List[Dict[str, Any]] = []
-        for db_name in sorted(self._attached_dbs):
+        if scope:
             try:
-                result_df = con.sql(f"SHOW TABLES FROM {db_name}").df()
-                result_df['full_name'] = result_df['name'].apply(lambda x: f"{db_name}.{x}")
-                rows.extend(result_df.to_dict(orient='records'))
+                query = f"SHOW TABLES FROM {scope}"
+                result_df = con.sql(query).df()
+                result_df['full_name'] = result_df['name'].apply(lambda x: f"{scope}.{x}")
+                json_str = result_df.to_json(orient='records', date_format='iso')
+                return json.loads(json_str)
             except Exception as e:
-                logger.warning("Failed to list tables from %s: %s", db_name, e)
+                return [{"error": str(e)}]
+
+        # 引数なし: DB_TYPEに応じて処理を分ける
+        rows: List[Dict[str, Any]] = []
+
+        if config.DB_TYPE == "thelook":
+            # thelookの場合: DuckDBのシステムテーブルからスキーマ/データベース一覧を動的に取得
+            try:
+                # DuckDB内のスキーマとアタッチされたデータベースを取得
+                schema_query = """
+                    SELECT DISTINCT
+                        CASE
+                            WHEN database_name = 'thelook' THEN schema_name
+                            ELSE database_name
+                        END as target_name
+                    FROM duckdb_schemas()
+                    WHERE database_name NOT IN ('system', 'temp')
+                        AND schema_name NOT IN ('main', 'information_schema', 'pg_catalog')
+                    ORDER BY target_name
+                """
+                schema_df = con.sql(schema_query).df()
+                targets = schema_df['target_name'].tolist()
+
+                for target_name in targets:
+                    try:
+                        result_df = con.sql(f"SHOW TABLES FROM {target_name}").df()
+                        result_df['full_name'] = result_df['name'].apply(lambda x: f"{target_name}.{x}")
+                        rows.extend(result_df.to_dict(orient='records'))
+                    except Exception as e:
+                        logger.warning("Failed to list tables from %s: %s", target_name, e)
+            except Exception as e:
+                logger.warning("Failed to get schema list: %s", e)
+
+        elif config.DB_TYPE == "bird":
+            # birdの場合: attach済みのデータベースをループ（従来通り）
+            for db_name in sorted(self._attached_dbs):
+                try:
+                    result_df = con.sql(f"SHOW TABLES FROM {db_name}").df()
+                    result_df['full_name'] = result_df['name'].apply(lambda x: f"{db_name}.{x}")
+                    rows.extend(result_df.to_dict(orient='records'))
+                except Exception as e:
+                    logger.warning("Failed to list tables from %s: %s", db_name, e)
+
         return rows
     
     def describe_tables(self, table_full_names: List[str]) -> Dict[str, Any]:

@@ -20,53 +20,34 @@ class DatabaseToolsWithKnowledges(DatabaseTools):
     取得したスキーマ情報に対して get_by_database で取得した知識をマージして返します。
     """
 
-    def list_tables(self, database: str = None) -> List[Dict[str, Any]]:
+    def list_tables(self, scope: str = None) -> List[Dict[str, Any]]:
         """
         データベースのスキーマ情報に基づき、テーブル一覧を取得する。
 
         Args:
-            database (str, optional): 対象データベース名を指定する。省略時は attach されている全 DB を対象とする。
+            scope (str, optional): 対象のスコープ（スキーマ名またはデータベース名）を指定する。
+                省略時は全スコープを対象とする。
 
         Returns:
             List[Dict[str, Any]]: テーブル情報のリスト。各要素に 'knowledge' キーが追加され、テーブルに関連する知識が格納される。
         """
         ensure_attached(self.connection)
-        raw_table_list = super().list_tables(database)
-        if database:
-            table_full_names = []
-            for item in raw_table_list:
-                name = item.get("full_name") or item.get("name")
-                if name:
-                    if "." not in name:
-                        name = f"{database}.{name}"
-                    table_full_names.append(name)
-            if not table_full_names:
-                return raw_table_list
-            knowledge_rows = get_by_database(
-                self.connection, scope=database, table_full_names=table_full_names, schema=config.KNOWLEDGES_SCHEMA
-            )
-            return self._enrich_list_tables(raw_table_list, knowledge_rows)
-        # 引数なし（全 DB 対象）: DB ごとに knowledges を取得してマージ
-        tables_by_db: Dict[str, List[str]] = {}
+        raw_table_list = super().list_tables(scope)
+        # テーブル完全修飾名を収集
+        table_full_names = []
         for item in raw_table_list:
-            full_name = item.get("full_name") or item.get("name") or ""
-            if not full_name:
-                continue
-            if "." in full_name:
-                db_name = full_name.split(".", 1)[0]
-                tables_by_db.setdefault(db_name, []).append(full_name)
-            else:
-                tables_by_db.setdefault("", []).append(full_name)
-        all_knowledge_rows: List[Dict[str, Any]] = []
-        for db_name, names in tables_by_db.items():
-            if not db_name:
-                continue
-            all_knowledge_rows.extend(
-                get_by_database(
-                    self.connection, scope=db_name, table_full_names=names, schema=config.KNOWLEDGES_SCHEMA
-                )
-            )
-        return self._enrich_list_tables(raw_table_list, all_knowledge_rows)
+            name = item.get("full_name") or item.get("name")
+            if name:
+                if scope and "." not in name:
+                    name = f"{scope}.{name}"
+                table_full_names.append(name)
+        if not table_full_names:
+            return raw_table_list
+        # table_full_names でフィルタして knowledges を取得（scope に依存しない）
+        knowledge_rows = get_by_database(
+            self.connection, table_full_names=table_full_names, schema=config.KNOWLEDGES_SCHEMA
+        )
+        return self._enrich_list_tables(raw_table_list, knowledge_rows)
 
     def describe_tables(self, table_full_names: List[str]) -> Dict[str, Any]:
         """
@@ -81,17 +62,11 @@ class DatabaseToolsWithKnowledges(DatabaseTools):
 
         ensure_attached(self.connection)
         raw_describe_result = super().describe_tables(table_full_names)
-        # 先頭のテーブル名からデータベース名/スコープを取得（例: "db1.table1" -> "db1"）
-        database_name = (
-            table_full_names[0].split(".", 1)[0]
-            if table_full_names and "." in table_full_names[0]
-            else None
-        )
-        if not database_name:
+        if not table_full_names:
             return raw_describe_result
+        # table_full_names でフィルタして knowledges を取得（scope に依存しない）
         knowledge_rows = get_by_database(
             self.connection,
-            scope=database_name,
             table_full_names=list(raw_describe_result.keys()),
             schema=config.KNOWLEDGES_SCHEMA,
         )
