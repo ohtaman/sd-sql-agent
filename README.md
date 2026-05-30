@@ -23,11 +23,15 @@ sql_agent/
 ├── agents/
 │   ├── naive_agent/           # 最も単純なSQLエージェント（第2〜4回）
 │   ├── basic_agent/           # スキーマ探索機能付き（第4回）
-│   └── semantic_agent/        # セマンティック知識活用（第4回）
+│   ├── semantic_agent/        # セマンティック知識活用（第4回）
+│   └── search_agent/          # テーブルディスカバリ機能付き（第6回）
 ├── src/sql_agent/
 │   ├── tools/                 # データベース接続・操作ツール
+│   │   ├── database_tools.py                  # 基本ツール（第3回）
+│   │   ├── database_tools_with_knowledges.py  # 知識マージ（第4回）
+│   │   └── database_tools_with_discovery.py   # 探索機能（第6回）
 │   ├── eval/                  # 評価スクリプト
-│   └── knowledges.py          # ナレッジストア（第4回）
+│   └── knowledges.py          # ナレッジストア・キーワード探索（第4・6回）
 ├── data/bird/minidev/         # BIRDデータセット（配置場所）
 ├── dbt_thelook/               # dbtプロジェクト（第5回〜）
 │   └── models/                # dbtモデル（staging/intermediate/marts）
@@ -61,13 +65,18 @@ unzip minidev_0703.zip
 
 ## 🚀 実行方法
 
-### 1. Web UIでの実行（第2〜4回）
+### 1. Web UIでの実行
 ブラウザ上でエージェントと対話できます。
 
 ```bash
 uv run adk web agents
 ```
-ブラウザで `http://localhost:8000` にアクセスし、`naive_agent` を選択してください。
+ブラウザで `http://localhost:8000` にアクセスし、使用するエージェントを選択してください。
+
+- `naive_agent`: 基本的なSQLエージェント（第3回）
+- `basic_agent`: スキーマ探索機能付き（第4回）
+- `semantic_agent`: セマンティック知識活用（第4回）
+- `search_agent`: テーブルディスカバリ機能付き（第6回〜）。thelookデータセットで使用します。
 
 ### 2. 評価の実行（第3〜4回）
 BIRDデータセットを用いてエージェントの性能を評価します。
