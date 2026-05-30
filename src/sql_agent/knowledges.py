@@ -129,3 +129,74 @@ def get_by_database(
         want = set(table_full_names)
         result = [r for r in result if want & set(r["table_full_names"])]
     return result
+
+
+def search_knowledge(
+    con: duckdb.DuckDBPyConnection,
+    query: str,
+    scope: str | None = None,
+    limit: int = 10,
+    schema: str | None = None,
+) -> list[dict[str, Any]]:
+    """
+    knowledges テーブルを keyword 検索し、マッチ数でランキングして返す。
+
+    LLM エージェントが検索語を決めて呼び出す想定。
+    BM25 などの高度なランキングは使わず、SQL の文字列置換でマッチ数を数える。
+
+    Args:
+        query: 検索キーワード。
+        scope: スコープで絞り込む場合に指定。省略時は全スコープを対象。
+        limit: 返却する最大件数。
+        schema: knowledges テーブルが存在するスキーマ名。省略時は config のデフォルト。
+            テスト時は None を渡すとインメモリの knowledges テーブルを直接参照する。
+
+    Returns:
+        マッチ数降順でソートされた knowledges のリスト。
+        各要素に score キーが追加される。
+    """
+    import re
+
+    table = f'"{schema}".knowledges' if schema else "knowledges"
+    escaped_query = re.escape(query)
+
+    scope_clause = "AND scope = ?" if scope else ""
+
+    sql = f"""
+        WITH scored AS (
+            SELECT
+                scope,
+                table_full_names,
+                column_names,
+                kind,
+                title,
+                content,
+                source,
+                -- 正規表現を使ってキーワードの出現数を算出
+                len(regexp_extract_all(content, ?)) -- ? には検索キーワード (query) が入る
+                + len(regexp_extract_all(COALESCE(title, ''), ?)) AS score -- 同上
+            FROM {table}
+            WHERE score > 0
+              AND deleted_at IS NULL
+              {scope_clause}
+        )
+
+        SELECT *
+        FROM scored
+        -- スコア上位のものにしぼる
+        ORDER BY score DESC
+        LIMIT ? -- ? には返却件数の上限 (limit) が入る
+    """
+
+    exec_params: list = [escaped_query, escaped_query]
+    if scope:
+        exec_params.append(scope)
+    exec_params.append(limit)
+
+    con.execute(sql, exec_params)
+    rows = con.fetchall()
+    columns = [
+        "scope", "table_full_names", "column_names",
+        "kind", "title", "content", "source", "score",
+    ]
+    return [dict(zip(columns, row)) for row in rows]
