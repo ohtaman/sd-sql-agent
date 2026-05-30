@@ -1,0 +1,50 @@
+# セマンティックレイヤー: metrics / dimensions 定義
+# 記事第7回で使用するmetrics定義をknowledgesに投入するためのデータ
+
+# --- total_revenue ---
+- scope: thelook
+  table_full_names: ["marts_finance.fct_daily_sales"]
+  column_names: ["marts_finance.fct_daily_sales.revenue"]
+  kind: metric
+  title: "売上（total_revenue）"
+  content: |
+    計算式: SUM(sale_price)
+    補足:
+    - 対象: item_status IN ('Shipped', 'Complete') のみ（発送基準）。Cancelled, Returned, Processing は除外する。
+    - 日次集計は fct_daily_sales.revenue を使用する。
+    - 明細単位は fct_order_items.sale_price を使用する。
+    - fct_orders.order_total は全ステータスを含むため、売上としてそのまま使うと過大になる。
+
+# --- margin_rate ---
+- scope: thelook
+  table_full_names: ["marts_finance.fct_product_margin"]
+  column_names: ["marts_finance.fct_product_margin.margin_rate"]
+  kind: metric
+  title: "粗利率（margin_rate）"
+  content: |
+    計算式: SUM(total_margin) / SUM(total_revenue) * 100
+    補足:
+    - fct_product_margin.margin_rate は商品単位の粗利率。
+
+# --- number_of_orders ---
+- scope: thelook
+  table_full_names: ["marts_core.fct_orders"]
+  column_names: []
+  kind: metric
+  title: "注文数（number_of_orders）"
+  content: |
+    計算式: COUNT(DISTINCT order_id)
+    補足:
+    - fct_orders は全ステータスを含む。確定注文のみの注文数が必要な場合は、order_status でフィルタすること。
+
+# --- average_order_value ---
+- scope: thelook
+  table_full_names: ["marts_finance.fct_daily_sales"]
+  column_names: []
+  kind: metric
+  title: "平均注文金額（AOV）"
+  content: |
+    計算式: SUM(revenue) / COUNT(DISTINCT order_id)
+    補足:
+    - 発送基準（Shipped, Complete）の注文のみを対象とする。
+    - fct_daily_sales の revenue と order_count から算出可能。

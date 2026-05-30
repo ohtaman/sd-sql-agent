@@ -15,6 +15,7 @@ dependencies = [
     "google-adk",
     "dbt-duckdb>=1.10.1",
     "google-cloud-bigquery>=3.40.0",
+    "pyyaml>=6.0.3",
 ]
 
 [project.optional-dependencies]
@@ -26,6 +27,7 @@ dev = [
 eval-bird = "sql_agent.eval.eval_bird:evaluate"
 load-bird-knowledges = "sql_agent.load_bird_knowledges:main"
 load-dbt-knowledges = "sql_agent.load_dbt_knowledges:main"
+load-knowledges = "sql_agent.load_knowledges:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

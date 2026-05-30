@@ -158,7 +158,9 @@ def search_knowledge(
     import re
 
     table = f'"{schema}".knowledges' if schema else "knowledges"
-    escaped_query = re.escape(query)
+    # スペース区切りでキーワードを分割し、OR検索パターンを構築
+    keywords = query.split()
+    pattern = "|".join(re.escape(k) for k in keywords)
 
     scope_clause = "AND scope = ?" if scope else ""
 
@@ -173,8 +175,8 @@ def search_knowledge(
                 content,
                 source,
                 -- 正規表現を使ってキーワードの出現数を算出
-                len(regexp_extract_all(content, ?)) -- ? には検索キーワード (query) が入る
-                + len(regexp_extract_all(COALESCE(title, ''), ?)) AS score -- 同上
+                len(regexp_extract_all(content, ?))
+                + len(regexp_extract_all(COALESCE(title, ''), ?)) AS score
             FROM {table}
             WHERE score > 0
               AND deleted_at IS NULL
@@ -183,12 +185,11 @@ def search_knowledge(
 
         SELECT *
         FROM scored
-        -- スコア上位のものにしぼる
         ORDER BY score DESC
-        LIMIT ? -- ? には返却件数の上限 (limit) が入る
+        LIMIT ?
     """
 
-    exec_params: list = [escaped_query, escaped_query]
+    exec_params: list = [pattern, pattern]
     if scope:
         exec_params.append(scope)
     exec_params.append(limit)
