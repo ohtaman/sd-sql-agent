@@ -1,0 +1,77 @@
+# 参照クエリ（golden queries）
+# 過去の分析で正しいとされた質問-SQLペア
+# title は content から自動生成
+
+# --- リピート購入率 ---
+- scope: thelook
+  table_full_names: ["marts_core.fct_order_items", "marts_core.fct_orders"]
+  column_names: []
+  kind: reference_query
+  title: "リピート購入率の算出"
+  content: |
+    question: 直近1年間に購入した顧客のうち、2回以上購入した顧客の割合（リピート購入率）は？
+
+    answer:
+    ```sql
+    WITH confirmed_orders AS (
+        SELECT DISTINCT
+            o.user_id,
+            oi.order_id
+        FROM marts_core.fct_order_items oi
+        JOIN marts_core.fct_orders o USING (order_id)
+        WHERE o.created_at >= CURRENT_DATE - INTERVAL '1 year'
+    ),
+    user_orders AS (
+        SELECT
+            user_id,
+            COUNT(*) AS order_count
+        FROM confirmed_orders
+        GROUP BY user_id
+    )
+    SELECT
+        COUNT(*) AS total_customers,
+        COUNT(CASE WHEN order_count >= 2 THEN 1 END) AS repeat_customers,
+        ROUND(COUNT(CASE WHEN order_count >= 2 THEN 1 END) * 100.0 / COUNT(*), 2) AS repeat_rate
+    FROM user_orders
+    ```
+
+# --- カテゴリ別粗利率 ---
+- scope: thelook
+  table_full_names: ["marts_finance.fct_product_margin"]
+  column_names: []
+  kind: reference_query
+  title: "カテゴリ別粗利率の算出"
+  content: |
+    question: カテゴリ別の粗利率を出して
+
+    answer:
+    ```sql
+    SELECT
+        category,
+        SUM(total_revenue) AS total_revenue,
+        SUM(total_margin) AS total_margin,
+        ROUND(SUM(total_margin) / SUM(total_revenue) * 100, 2) AS margin_rate
+    FROM marts_finance.fct_product_margin
+    GROUP BY category
+    ORDER BY margin_rate ASC
+    ```
+
+# --- 月次売上推移 ---
+- scope: thelook
+  table_full_names: ["marts_finance.fct_daily_sales"]
+  column_names: []
+  kind: reference_query
+  title: "月次売上推移の算出"
+  content: |
+    question: 月次の売上推移を見せて
+
+    answer:
+    ```sql
+    SELECT
+        DATE_TRUNC('month', sales_date) AS month,
+        SUM(revenue) AS monthly_revenue,
+        SUM(order_count) AS monthly_orders
+    FROM marts_finance.fct_daily_sales
+    GROUP BY month
+    ORDER BY month
+    ```
