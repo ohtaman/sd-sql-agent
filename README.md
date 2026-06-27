@@ -33,6 +33,10 @@ sql_agent/
 │   ├── eval/                  # 評価スクリプト
 │   └── knowledges.py          # ナレッジストア・キーワード探索（第4・6回）
 ├── data/bird/minidev/         # BIRDデータセット（配置場所）
+├── knowledges/                # セマンティックレイヤー定義（第7回）
+│   ├── metrics.yml            # 指標の計算ルール
+│   ├── reference_queries.yml  # 参照クエリ（golden queries）
+│   └── business_context.yml   # ビジネスコンテキスト（施策・計測変更）
 ├── dbt_thelook/               # dbtプロジェクト（第5回〜）
 │   └── models/                # dbtモデル（staging/intermediate/marts）
 └── duckdb/                    # DuckDBワークスペース
@@ -121,6 +125,16 @@ dbtのメタデータ（テーブル説明、カラム説明、リネージ、�
 
 ```bash
 uv run load-dbt-knowledges
+```
+
+### 4. セマンティックレイヤーの投入（第7回〜）
+
+指標定義、参照クエリ、ビジネスコンテキストをknowledgesテーブルに投入します。
+
+```bash
+uv run load-knowledges --file knowledges/metrics.yml --source-name semantic_layer --replace
+uv run load-knowledges --file knowledges/reference_queries.yml --source-name reference_query --replace
+uv run load-knowledges --file knowledges/business_context.yml --source-name business_context --replace
 ```
 
 **重要**: すべてのdbtコマンドは `uv run dbt ...` の形式で実行してください。グローバル環境に依存せず、プロジェクト固有の環境で実行できます。

@@ -1,0 +1,60 @@
+# ビジネスコンテキスト（仮想データ）
+# thelook eCommerce の架空の施策・リリース・計測変更イベント
+# 記事第7回のケーススタディ（Q3: 9月以降の傾向変化）で使用
+
+- scope: thelook
+  table_full_names: []
+  column_names: []
+  kind: business_context
+  title: "施策: 送料無料キャンペーン"
+  content: |
+    2024年7月1日〜7月31日: 送料無料キャンペーンを実施。
+    対象: 全商品。
+    期待効果: 注文数の増加、特に低単価商品の購入促進。
+    結果: 7月の注文数は前月比+15%。8月以降は元の水準に戻った。
+
+- scope: thelook
+  table_full_names: []
+  column_names: []
+  kind: business_context
+  title: "施策: レディースカテゴリ広告強化"
+  content: |
+    2024年8月15日〜: レディースカテゴリ（Women's部門）のデジタル広告配信を強化。
+    対象カテゴリ: Dresses, Tops & Tees, Jeans（Women）。
+    予算: 前月比2倍。
+    期待効果: Women部門の売上増加。
+
+- scope: thelook
+  table_full_names: []
+  column_names: []
+  kind: business_context
+  title: "リリース: checkout UI改善"
+  content: |
+    2024年9月10日: checkout画面のUI改善をリリース。
+    変更内容: 購入フローのステップ数を5→3に削減。配送先住所の自動補完を追加。
+    期待効果: カート離脱率の低下、コンバージョン率の改善。
+    注意: この変更以降、完了率やコンバージョン率の前後比較を行う場合は、UI変更の影響を考慮すること。
+
+- scope: thelook
+  table_full_names: ["marts_finance.fct_daily_sales", "marts_core.fct_order_items"]
+  column_names: ["marts_core.fct_order_items.sale_price"]
+  kind: business_context
+  title: "計測変更: sale_price の税込→税抜変更"
+  content: |
+    2024年10月1日: sale_price の計測仕様を変更。
+    変更前: 税込価格（VAT含む）。
+    変更後: 税抜価格。
+    影響: 10月以降の売上（revenue）は、9月以前と単純比較すると約10%低く見える。
+    前後比較を行う場合は、この計測変更を考慮すること。
+
+- scope: thelook
+  table_full_names: []
+  column_names: []
+  kind: business_context
+  title: "KPI方針: 2024年下半期"
+  content: |
+    2024年下半期の重点KPI:
+    1. リピート購入率の改善（目標: 40%以上）
+    2. Women部門の売上構成比拡大（目標: 全体の35%以上）
+    3. 粗利率の維持（目標: 全体で45%以上）
+    分析時には、これらのKPIに関連する指標を優先的に確認すること。
